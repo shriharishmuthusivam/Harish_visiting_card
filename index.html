@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Visiting Card</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <style>
+    /* ── UNAVOIDABLE ANIMATIONS (Bootstrap has no utility for these) ── */
+
+    /* Spinning photo ring - conic-gradient + rotation not possible in Bootstrap */
+    .photo-ring { position:relative; width:110px; height:110px; flex-shrink:0; }
+    .photo-ring::before {
+      content:''; position:absolute; inset:0; border-radius:50%;
+      background: conic-gradient(#c8a96e 0%, #f0d898 40%, #c8a96e 60%, #7a5d28 100%);
+      animation: spin 6s linear infinite; z-index:0;
+    }
+    .photo-inner {
+      position:absolute; inset:3px; border-radius:50%;
+      background:#131313; overflow:hidden; z-index:1;
+    }
+    .photo-inner img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* Card entrance - no Bootstrap utility for custom cubic-bezier entrance */
+    .card-enter { animation: slideUp 0.85s cubic-bezier(0.22,1,0.36,1) both; }
+    @keyframes slideUp {
+      from { opacity:0; transform:translateY(36px) scale(0.96); }
+      to   { opacity:1; transform:translateY(0) scale(1); }
+    }
+
+    /* Gold top accent line - ::before pseudo not possible in Bootstrap */
+    .card-accent::before {
+      content:''; position:absolute; top:0; left:15%; right:15%; height:2px;
+      background: linear-gradient(90deg, transparent, #c8a96e, transparent);
+    }
+
+    /* Blinking cursor - step-end timing not in Bootstrap */
+    .type-cursor {
+      display:inline-block; width:2px; height:0.85em;
+      background:#c8a96e; margin-left:2px; vertical-align:middle;
+      animation: blink 0.9s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* Pulsing badge dot - scale animation not in Bootstrap */
+    .pulse-dot {
+      width:7px; height:7px; border-radius:50%; background:#4ade80;
+      animation: pulse-dot 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%,100% { opacity:1; transform:scale(1); }
+      50%      { opacity:0.4; transform:scale(0.7); }
+    }
+
+    /* Copy toast - absolute centered right, opacity transition */
+    .copy-toast {
+      position:absolute; right:10px; top:50%; transform:translateY(-50%);
+      opacity:0; pointer-events:none; transition:opacity 0.3s;
+    }
+    .copy-toast.show { opacity:1; }
+
+    /* Gold divider - gradient not possible in Bootstrap hr */
+    .gold-divider {
+      height:1px; border:none; opacity:1;
+      background: linear-gradient(90deg, transparent, rgba(200,169,110,0.5), transparent);
+    }
+
+    /* Canvas fixed background */
+    #bg-canvas { position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+  </style>
+</head>
+<body class="overflow-x-hidden" style="background:#060608; min-height:100vh;">
+
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- Page wrapper -->
+  <div class="position-relative d-flex align-items-center justify-content-center min-vh-100 py-4 px-3" style="z-index:1;">
+
+    <!-- Card -->
+    <div class="card-enter card-accent position-relative overflow-hidden rounded-4 p-4"
+         id="vcCard"
+         style="width:340px; background:#131313; border:1px solid rgba(200,169,110,0.22);">
+
+      <!-- Theme toggle -->
+      <button id="themeBtn"
+              class="btn position-absolute top-0 end-0 mt-2 me-2 rounded-circle d-flex align-items-center justify-content-center p-0"
+              style="width:30px; height:30px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#c8a96e;">
+        <i class="bi bi-sun-fill" id="themeIcon" style="font-size:13px;"></i>
+      </button>
+
+      <!-- Photo + Badge -->
+      <div class="d-flex flex-column align-items-center mt-2 mb-3 gap-2">
+        <div class="photo-ring">
+          <div class="photo-inner d-flex align-items-center justify-content-center">
+            <!-- Replace below span with: <img src="your-photo.jpg" alt="Your Name"/> -->
+            <img src="Harish_Profesional_Photo.PNG" alt="Your Name"/>
+          </div>
+        </div>
+        <!-- Availability badge -->
+        <span class="d-inline-flex align-items-center gap-2 rounded-pill px-3 py-1 small fw-medium"
+              style="background:rgba(34,197,94,0.12); border:1px solid rgba(34,197,94,0.3); color:#4ade80; font-size:0.68rem; letter-spacing:0.5px;">
+          <span class="pulse-dot"></span>
+          Open to Work
+        </span>
+      </div>
+
+      <!-- Name -->
+      <div class="text-center mb-1">
+        <div id="profileName"
+     class="fw-bold text-white"
+     style="font-family:Georgia,serif; font-size:1.65rem; letter-spacing:0.3px; line-height:1.15;">
+  SHRIHARISH V M
+</div>
+      </div>
+
+      <!-- Typing role -->
+      <div class="text-center mb-3">
+        <span class="fw-medium text-uppercase" style="font-size:0.7rem; letter-spacing:2.5px; color:#c8a96e;">
+          <span id="typed-role"></span><span class="type-cursor"></span>
+        </span>
+      </div>
+
+      <!-- Skill tags -->
+      <div class="d-flex flex-wrap gap-2 justify-content-center mb-3 px-1">
+        <span class="badge rounded-pill fw-medium px-2 py-1"
+              style="font-size:0.65rem; background:rgba(200,169,110,0.1); border:1px solid rgba(200,169,110,0.25); color:#c8a96e;">Python</span>
+        <span class="badge rounded-pill fw-medium px-2 py-1"
+              style="font-size:0.65rem; background:rgba(200,169,110,0.1); border:1px solid rgba(200,169,110,0.25); color:#c8a96e;">Machine Learning</span>
+        <span class="badge rounded-pill fw-medium px-2 py-1"
+              style="font-size:0.65rem; background:rgba(200,169,110,0.1); border:1px solid rgba(200,169,110,0.25); color:#c8a96e;">React</span>
+        <span class="badge rounded-pill fw-medium px-2 py-1"
+              style="font-size:0.65rem; background:rgba(200,169,110,0.1); border:1px solid rgba(200,169,110,0.25); color:#c8a96e;">FastAPI</span>
+      </div>
+
+      <hr class="gold-divider mx-3 mb-3"/>
+
+      <!-- Contact rows -->
+      <div class="d-flex flex-column gap-2 mb-3 px-1">
+
+        <!-- Email -->
+        <div class="d-flex align-items-center gap-3 rounded-3 px-3 py-2 position-relative"
+             style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); cursor:pointer; font-size:0.83rem; color:#a89c85;"
+             onclick="copyText('shriharishmuthusivam@gmail.com','toast-email')"
+             onmouseover="this.style.background='rgba(200,169,110,0.1)'; this.style.borderColor='rgba(200,169,110,0.3)'; this.style.color='#f2ede4';"
+             onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.borderColor='rgba(255,255,255,0.07)'; this.style.color='#a89c85';">
+          <div class="d-flex align-items-center justify-content-center rounded-2 flex-shrink-0"
+               style="width:32px; height:32px; background:rgba(200,169,110,0.15); color:#c8a96e; font-size:14px;">
+            <i class="bi bi-envelope-fill"></i>
+          </div>
+          <span class="text-truncate flex-grow-1">shriharishmuthusivam@gmail.com</span>
+          <span class="copy-toast badge rounded-2 fw-bold" id="toast-email"
+                style="background:#4ade80; color:#0a1a0a; font-size:0.65rem;">Copied!</span>
+        </div>
+
+        <!-- Phone -->
+        <div class="d-flex align-items-center gap-3 rounded-3 px-3 py-2 position-relative"
+             style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); cursor:pointer; font-size:0.83rem; color:#a89c85;"
+             onclick="copyText('+91 94432 29919','toast-phone')"
+             onmouseover="this.style.background='rgba(200,169,110,0.1)'; this.style.borderColor='rgba(200,169,110,0.3)'; this.style.color='#f2ede4';"
+             onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.borderColor='rgba(255,255,255,0.07)'; this.style.color='#a89c85';">
+          <div class="d-flex align-items-center justify-content-center rounded-2 flex-shrink-0"
+               style="width:32px; height:32px; background:rgba(200,169,110,0.15); color:#c8a96e; font-size:14px;">
+            <i class="bi bi-telephone-fill"></i>
+          </div>
+          <span class="flex-grow-1">+91 94432 29919</span>
+          <span class="copy-toast badge rounded-2 fw-bold" id="toast-phone"
+                style="background:#4ade80; color:#0a1a0a; font-size:0.65rem;">Copied!</span>
+        </div>
+
+      </div>
+
+      <!-- Social Buttons -->
+      <div class="d-flex gap-2 px-1 mb-3">
+        <a href="https://github.com/shriharishmuthusivam" target="_blank"
+           class="btn d-flex align-items-center justify-content-center gap-2 flex-fill py-2 fw-semibold rounded-3"
+           style="background:linear-gradient(135deg,#1a1a1a,#2a2a2a); border:1.5px solid rgba(255,255,255,0.18); color:#fff; font-size:0.82rem; letter-spacing:0.5px;"
+           onmouseover="this.style.background='linear-gradient(135deg,#2d2d2d,#444)'; this.style.borderColor='rgba(255,255,255,0.5)'; this.style.transform='translateY(-3px) scale(1.03)';"
+           onmouseout="this.style.background='linear-gradient(135deg,#1a1a1a,#2a2a2a)'; this.style.borderColor='rgba(255,255,255,0.18)'; this.style.transform='';">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0;">
+            <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/>
+          </svg>
+          GitHub
+        </a>
+        <a href="https://www.linkedin.com/in/shri-harish/" target="_blank"
+           class="btn d-flex align-items-center justify-content-center gap-2 flex-fill py-2 fw-semibold rounded-3"
+           style="background:linear-gradient(135deg,#0a66c2,#004182); border:1.5px solid rgba(106,172,245,0.4); color:#fff; font-size:0.82rem; letter-spacing:0.5px;"
+           onmouseover="this.style.background='linear-gradient(135deg,#1a7fd4,#0a55a8)'; this.style.borderColor='rgba(106,172,245,0.8)'; this.style.transform='translateY(-3px) scale(1.03)';"
+           onmouseout="this.style.background='linear-gradient(135deg,#0a66c2,#004182)'; this.style.borderColor='rgba(106,172,245,0.4)'; this.style.transform='';">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0;">
+            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+          </svg>
+          LinkedIn
+        </a>
+      </div>
+
+      <!-- Let's Connect -->
+      <div class="px-1 mb-3">
+        <a href="mailto:shriharishmuthusivam@gmail.com"
+           class="btn w-100 py-2 fw-bold text-decoration-none rounded-3 d-flex align-items-center justify-content-center gap-2"
+           style="background:linear-gradient(135deg,#c8a96e,#a07840); border:none; color:#0d0d0d; font-size:0.85rem; letter-spacing:1px; text-transform:uppercase;"
+           onclick="triggerConfetti()"
+           onmouseover="this.style.transform='translateY(-2px) scale(1.02)'; this.style.boxShadow='0 8px 30px rgba(200,169,110,0.55)';"
+           onmouseout="this.style.transform=''; this.style.boxShadow='';">
+          <i class="bi bi-envelope"></i> Let's Connect!
+        </a>
+      </div>
+
+      <hr class="gold-divider mx-3 mb-3"/>
+
+      <!-- Portfolio Button -->
+      <div class="px-1 mb-2">
+        <a href="https://shriharishmuthusivam.github.io/Internship_webpage/" target="_blank"
+           class="btn w-100 py-2 fw-semibold rounded-3 d-flex align-items-center justify-content-center gap-2"
+           style="background:transparent; border:1.5px solid rgba(200,169,110,0.45); color:#c8a96e; font-size:0.82rem; letter-spacing:0.8px;"
+           onmouseover="this.style.background='rgba(200,169,110,0.1)'; this.style.borderColor='#c8a96e'; this.style.transform='translateY(-2px) scale(1.02)';"
+           onmouseout="this.style.background='transparent'; this.style.borderColor='rgba(200,169,110,0.45)'; this.style.transform='';">
+          <i class="bi bi-globe2"></i> View Portfolio
+        </a>
+      </div>
+
+    </div><!-- /card -->
+  </div><!-- /wrapper -->
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+
+    // ── 1. ANIMATED BACKGROUND (canvas — no Bootstrap equivalent) ──
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let W, H;
+    function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+    resize(); window.addEventListener('resize', resize);
+    const orbs = [
+      { x:0.15,y:0.20,r:0.38,hue:38, speed:0.00018,amp:0.12,phase:0.00 },
+      { x:0.80,y:0.75,r:0.32,hue:210,speed:0.00023,amp:0.10,phase:1.80 },
+      { x:0.50,y:0.50,r:0.28,hue:280,speed:0.00014,amp:0.08,phase:3.50 },
+      { x:0.85,y:0.15,r:0.22,hue:160,speed:0.00029,amp:0.09,phase:0.90 },
+      { x:0.10,y:0.80,r:0.20,hue:340,speed:0.00021,amp:0.11,phase:2.40 },
+    ];
+    const particles = Array.from({length:55},()=>({
+      x:Math.random(), y:Math.random(),
+      size:Math.random()*1.6+0.4,
+      speedX:(Math.random()-0.5)*0.00012,
+      speedY:(Math.random()-0.5)*0.00012,
+      opacity:Math.random()*0.5+0.15,
+      hue:Math.random()*360
+    }));
+    let t = 0;
+    function drawBg() {
+      t++;
+      ctx.fillStyle='#060608'; ctx.fillRect(0,0,W,H);
+      orbs.forEach(o => {
+        const cx=(o.x+Math.sin(t*o.speed+o.phase)*o.amp)*W;
+        const cy=(o.y+Math.cos(t*o.speed*0.7+o.phase)*o.amp)*H;
+        const r=o.r*Math.min(W,H);
+        const g=ctx.createRadialGradient(cx,cy,0,cx,cy,r);
+        g.addColorStop(0,`hsla(${o.hue},80%,60%,0.18)`);
+        g.addColorStop(0.4,`hsla(${o.hue},70%,45%,0.10)`);
+        g.addColorStop(1,`hsla(${o.hue},60%,30%,0.00)`);
+        ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+        ctx.fillStyle=g; ctx.fill();
+      });
+      ctx.save(); ctx.strokeStyle='rgba(255,255,255,0.025)'; ctx.lineWidth=0.5;
+      for(let x=0;x<W;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+      for(let y=0;y<H;y+=60){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+      ctx.restore();
+      particles.forEach(p=>{
+        p.x+=p.speedX; p.y+=p.speedY;
+        if(p.x<0)p.x=1; if(p.x>1)p.x=0;
+        if(p.y<0)p.y=1; if(p.y>1)p.y=0;
+        ctx.beginPath(); ctx.arc(p.x*W,p.y*H,p.size,0,Math.PI*2);
+        ctx.fillStyle=`hsla(${p.hue},60%,75%,${p.opacity})`; ctx.fill();
+      });
+      requestAnimationFrame(drawBg);
+    }
+    drawBg();
+
+    // ── 2. TYPING ANIMATION ──
+    const roles = [
+      "M.Sc. AI Student",
+      "AI Chatbot Developer",
+      "Machine Learning Engineer",
+      "NLP Enthusiast",
+      "Full Stack Developer",
+      "Open Source Contributor",
+    ];
+    let rIdx=0, charIdx=0, deleting=false;
+    const typedEl = document.getElementById('typed-role');
+    function type() {
+      const current = roles[rIdx];
+      if (!deleting) {
+        typedEl.textContent = current.slice(0, ++charIdx);
+        if (charIdx === current.length) { deleting=true; setTimeout(type,1800); return; }
+        setTimeout(type, 75);
+      } else {
+        typedEl.textContent = current.slice(0, --charIdx);
+        if (charIdx === 0) { deleting=false; rIdx=(rIdx+1)%roles.length; setTimeout(type,400); return; }
+        setTimeout(type, 40);
+      }
+    }
+    type();
+
+    // ── 3. COPY TO CLIPBOARD ──
+    function copyText(text, toastId) {
+      navigator.clipboard.writeText(text).then(() => {
+        const toast = document.getElementById(toastId);
+        toast.classList.add('show');
+        setTimeout(()=>toast.classList.remove('show'), 1500);
+      });
+    }
+
+    // ── 4. CONFETTI ──
+    function triggerConfetti() {
+      confetti({ particleCount:120, spread:80, origin:{y:0.7},
+        colors:['#c8a96e','#f0d898','#ffffff','#0a66c2','#4ade80'] });
+    }
+
+    // ── 5. DARK / LIGHT TOGGLE ──
+    const themeBtn  = document.getElementById('themeBtn');
+    const themeIcon = document.getElementById('themeIcon');
+    const vcCard    = document.getElementById('vcCard');
+    const profileName = document.getElementById('profileName');
+    themeBtn.addEventListener('click', () => {
+      const isLight = document.body.getAttribute('data-bs-theme') !== 'light';
+      if (isLight) {
+        // Switch to LIGHT — hide canvas, use Bootstrap bg-light
+        profileName.classList.remove('text-white');
+        profileName.classList.add('text-dark');
+        document.body.setAttribute('data-bs-theme', 'light');
+        document.body.classList.remove('bg-dark');
+        document.body.classList.add('bg-light');
+        canvas.classList.add('d-none');           // Bootstrap: hide canvas
+        vcCard.classList.remove('border-0');
+        vcCard.style.background = '#ffffff';
+        vcCard.style.border = '1px solid rgba(200,169,110,0.4)';
+        vcCard.style.boxShadow = '0 8px 40px rgba(0,0,0,0.1)';
+        themeIcon.className = 'bi bi-moon-fill';
+        themeBtn.style.color = '#a07840';
+      } else {
+        // Switch to DARK — show canvas, restore dark card
+        profileName.classList.remove('text-dark');
+        profileName.classList.add('text-white');
+        document.body.setAttribute('data-bs-theme', 'dark');
+        document.body.classList.remove('bg-light');
+        document.body.classList.add('bg-dark');
+        canvas.classList.remove('d-none');        // Bootstrap: show canvas
+        vcCard.style.background = '#131313';
+        vcCard.style.border = '1px solid rgba(200,169,110,0.22)';
+        vcCard.style.boxShadow = '';
+        themeIcon.className = 'bi bi-sun-fill';
+        themeBtn.style.color = '#c8a96e';
+      }
+    });
+
+    // ── 6. 3D TILT ──
+    const card = document.getElementById('vcCard');
+    document.addEventListener('mousemove', e => {
+      const rect = card.getBoundingClientRect();
+      const cx = rect.left + rect.width/2;
+      const cy = rect.top  + rect.height/2;
+      const dx = (e.clientX - cx) / (rect.width/2);
+      const dy = (e.clientY - cy) / (rect.height/2);
+      card.style.transform = `perspective(900px) rotateY(${dx*6}deg) rotateX(${-dy*6}deg) scale(1.01)`;
+    });
+    document.addEventListener('mouseleave', () => { card.style.transform = ''; });
+
+  </script>
+</body>
+</html>
