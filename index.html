@@ -4,10 +4,10 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Visiting Card</title>
-  <link rel="icon" type="image/png" href="logo.png">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
     /* ── UNAVOIDABLE ANIMATIONS (Bootstrap has no utility for these) ── */
@@ -72,6 +72,59 @@
 
     /* Canvas fixed background */
     #bg-canvas { position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+
+    /* =========================
+   RESPONSIVE FIXES
+========================= */
+
+/* Card Responsive */
+#vcCard{
+  width:100%;
+  max-width:340px;
+}
+
+/* Photo Responsive */
+.photo-ring{
+  width:clamp(80px, 24vw, 110px);
+  height:clamp(80px, 24vw, 110px);
+}
+
+/* Name Responsive */
+#profileName{
+  font-size:clamp(1.2rem, 4vw, 1.65rem) !important;
+  text-align:center;
+  word-break:break-word;
+}
+
+/* Skill Tags Responsive */
+.skill-tags{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:8px;
+}
+
+.skill-tags .badge{
+  font-size:clamp(0.55rem, 2vw, 0.65rem) !important;
+  white-space:nowrap;
+}
+
+/* Mobile Fix */
+@media (max-width:480px){
+
+  #vcCard{
+    padding:1rem !important;
+  }
+
+  .skill-tags{
+    gap:6px;
+  }
+
+  .skill-tags .badge{
+    padding:6px 10px !important;
+  }
+
+}
   </style>
 </head>
 <body class="overflow-x-hidden" style="background:#060608; min-height:100vh;">
@@ -97,7 +150,6 @@
       <div class="d-flex flex-column align-items-center mt-2 mb-3 gap-2">
         <div class="photo-ring">
           <div class="photo-inner d-flex align-items-center justify-content-center">
-            <!-- Replace below span with: <img src="your-photo.jpg" alt="Your Name"/> -->
             <img src="profile.png" alt="Your Name"/>
           </div>
         </div>
@@ -111,11 +163,9 @@
 
       <!-- Name -->
       <div class="text-center mb-1">
-        <div id="profileName"
-     class="fw-bold text-white"
-     style="font-family:Georgia,serif; font-size:1.65rem; letter-spacing:0.3px; line-height:1.15;">
-  SHRIHARISH V M
-</div>
+        <div class="fw-bold text-white" style="font-family:Georgia,serif; font-size:1.65rem; letter-spacing:0.3px; line-height:1.15;">
+          SHRIHARISH V M
+        </div>
       </div>
 
       <!-- Typing role -->
@@ -126,7 +176,7 @@
       </div>
 
       <!-- Skill tags -->
-      <div class="d-flex flex-wrap gap-2 justify-content-center mb-3 px-1">
+      <div class="skill-tags mb-3 px-1">
         <span class="badge rounded-pill fw-medium px-2 py-1"
               style="font-size:0.65rem; background:rgba(200,169,110,0.1); border:1px solid rgba(200,169,110,0.25); color:#c8a96e;">Python</span>
         <span class="badge rounded-pill fw-medium px-2 py-1"
@@ -214,7 +264,7 @@
 
       <!-- Portfolio Button -->
       <div class="px-1 mb-2">
-        <a href="https://shriharishmuthusivam.github.io/Internship_webpage/" target="_blank"
+        <a href="https://shriharishmuthusivam.github.io/Internship_webpage/#" target="_blank"
            class="btn w-100 py-2 fw-semibold rounded-3 d-flex align-items-center justify-content-center gap-2"
            style="background:transparent; border:1.5px solid rgba(200,169,110,0.45); color:#c8a96e; font-size:0.82rem; letter-spacing:0.8px;"
            onmouseover="this.style.background='rgba(200,169,110,0.1)'; this.style.borderColor='#c8a96e'; this.style.transform='translateY(-2px) scale(1.02)';"
@@ -224,6 +274,7 @@
       </div>
 
     </div><!-- /card -->
+
   </div><!-- /wrapper -->
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
@@ -251,31 +302,48 @@
       hue:Math.random()*360
     }));
     let t = 0;
+    let isLightMode = false;
+
     function drawBg() {
       t++;
-      ctx.fillStyle='#060608'; ctx.fillRect(0,0,W,H);
+      // Same animation — only base color + visibility values adapt
+      const bg          = isLightMode ? '#f5f0e8'              : '#060608';
+      const orbA1       = isLightMode ? 0.55                   : 0.18;   // orb inner opacity
+      const orbA2       = isLightMode ? 0.30                   : 0.10;   // orb mid opacity
+      const orbL1       = isLightMode ? '45%'                  : '60%';  // orb inner lightness
+      const orbL2       = isLightMode ? '35%'                  : '45%';  // orb mid lightness
+      const orbL3       = isLightMode ? '25%'                  : '30%';  // orb outer lightness
+      const gridColor   = isLightMode ? 'rgba(0,0,0,0.08)'     : 'rgba(255,255,255,0.025)';
+      const ptLightness = isLightMode ? '35%'                  : '75%';  // particles dark on light
+      const ptOpacity   = isLightMode ? p => p.opacity * 0.9   : p => p.opacity;
+
+      ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
+
       orbs.forEach(o => {
         const cx=(o.x+Math.sin(t*o.speed+o.phase)*o.amp)*W;
         const cy=(o.y+Math.cos(t*o.speed*0.7+o.phase)*o.amp)*H;
         const r=o.r*Math.min(W,H);
         const g=ctx.createRadialGradient(cx,cy,0,cx,cy,r);
-        g.addColorStop(0,`hsla(${o.hue},80%,60%,0.18)`);
-        g.addColorStop(0.4,`hsla(${o.hue},70%,45%,0.10)`);
-        g.addColorStop(1,`hsla(${o.hue},60%,30%,0.00)`);
+        g.addColorStop(0,   `hsla(${o.hue},85%,${orbL1},${orbA1})`);
+        g.addColorStop(0.4, `hsla(${o.hue},75%,${orbL2},${orbA2})`);
+        g.addColorStop(1,   `hsla(${o.hue},65%,${orbL3},0.00)`);
         ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
         ctx.fillStyle=g; ctx.fill();
       });
-      ctx.save(); ctx.strokeStyle='rgba(255,255,255,0.025)'; ctx.lineWidth=0.5;
+
+      ctx.save(); ctx.strokeStyle=gridColor; ctx.lineWidth=0.5;
       for(let x=0;x<W;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
       for(let y=0;y<H;y+=60){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
       ctx.restore();
+
       particles.forEach(p=>{
         p.x+=p.speedX; p.y+=p.speedY;
         if(p.x<0)p.x=1; if(p.x>1)p.x=0;
         if(p.y<0)p.y=1; if(p.y>1)p.y=0;
         ctx.beginPath(); ctx.arc(p.x*W,p.y*H,p.size,0,Math.PI*2);
-        ctx.fillStyle=`hsla(${p.hue},60%,75%,${p.opacity})`; ctx.fill();
+        ctx.fillStyle=`hsla(${p.hue},65%,${ptLightness},${ptOpacity(p)})`; ctx.fill();
       });
+
       requestAnimationFrame(drawBg);
     }
     drawBg();
@@ -324,36 +392,28 @@
     const themeBtn  = document.getElementById('themeBtn');
     const themeIcon = document.getElementById('themeIcon');
     const vcCard    = document.getElementById('vcCard');
-    const profileName = document.getElementById('profileName');
     themeBtn.addEventListener('click', () => {
-      const isLight = document.body.getAttribute('data-bs-theme') !== 'light';
-      if (isLight) {
-        // Switch to LIGHT — hide canvas, use Bootstrap bg-light
-        profileName.classList.remove('text-white');
-        profileName.classList.add('text-dark');
+      isLightMode = !isLightMode;           // flip canvas drawing mode
+      if (isLightMode) {
+        // Switch to LIGHT — canvas stays visible, draws light animation
         document.body.setAttribute('data-bs-theme', 'light');
-        document.body.classList.remove('bg-dark');
-        document.body.classList.add('bg-light');
-        canvas.classList.add('d-none');           // Bootstrap: hide canvas
-        vcCard.classList.remove('border-0');
-        vcCard.style.background = '#ffffff';
-        vcCard.style.border = '1px solid rgba(200,169,110,0.4)';
-        vcCard.style.boxShadow = '0 8px 40px rgba(0,0,0,0.1)';
-        themeIcon.className = 'bi bi-moon-fill';
-        themeBtn.style.color = '#a07840';
+        vcCard.style.background = '#ffffffee';
+        vcCard.style.border     = '1px solid rgba(200,169,110,0.4)';
+        vcCard.style.boxShadow  = '0 8px 40px rgba(0,0,0,0.1)';
+        themeIcon.className     = 'bi bi-moon-fill';
+        themeBtn.style.color    = '#a07840';
+        themeBtn.style.background = 'rgba(0,0,0,0.06)';
+        themeBtn.style.borderColor = 'rgba(0,0,0,0.12)';
       } else {
-        // Switch to DARK — show canvas, restore dark card
-        profileName.classList.remove('text-dark');
-        profileName.classList.add('text-white');
+        // Switch to DARK — canvas draws dark animation
         document.body.setAttribute('data-bs-theme', 'dark');
-        document.body.classList.remove('bg-light');
-        document.body.classList.add('bg-dark');
-        canvas.classList.remove('d-none');        // Bootstrap: show canvas
         vcCard.style.background = '#131313';
-        vcCard.style.border = '1px solid rgba(200,169,110,0.22)';
-        vcCard.style.boxShadow = '';
-        themeIcon.className = 'bi bi-sun-fill';
-        themeBtn.style.color = '#c8a96e';
+        vcCard.style.border     = '1px solid rgba(200,169,110,0.22)';
+        vcCard.style.boxShadow  = '';
+        themeIcon.className     = 'bi bi-sun-fill';
+        themeBtn.style.color    = '#c8a96e';
+        themeBtn.style.background = 'rgba(255,255,255,0.06)';
+        themeBtn.style.borderColor = 'rgba(255,255,255,0.1)';
       }
     });
 
