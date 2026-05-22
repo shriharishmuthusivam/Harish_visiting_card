@@ -1,1273 +1,460 @@
 <!DOCTYPE html>
 <html lang="en">
-
-
 <head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Visiting Card</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* ── UNAVOIDABLE ANIMATIONS (Bootstrap has no utility for these) ── */
 
-    <title>Harish Portfolio</title>
+    /* Spinning photo ring - conic-gradient + rotation not possible in Bootstrap */
+    .photo-ring { position:relative; width:110px; height:110px; flex-shrink:0; }
+    .photo-ring::before {
+      content:''; position:absolute; inset:0; border-radius:50%;
+      background: conic-gradient(#c8a96e 0%, #f0d898 40%, #c8a96e 60%, #7a5d28 100%);
+      animation: spin 6s linear infinite; z-index:0;
+    }
+    .photo-inner {
+      position:absolute; inset:3px; border-radius:50%;
+      background:#131313; overflow:hidden; z-index:1;
+    }
+    .photo-inner img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+    @keyframes spin { to { transform:rotate(360deg); } }
 
-    <!-- Bootstrap CSS -->
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Bootstrap Icons -->
-
-    <link rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
-    <!-- Google Font -->
-
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
-    rel="stylesheet">
-
-    <style>
-
-        *{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html{
-            scroll-behavior: smooth;
-        }
-
-        body{
-
-            font-family: 'Inter', sans-serif;
-
-            h1,
-            h2,
-            h3,
-            .navbar-brand{
-
-            font-family: 'Space Grotesk', sans-serif;
-
-            letter-spacing: -1px;
-
-            }
-
-    background: linear-gradient(
-        -45deg,
-        #0f172a,
-        #1e293b,
-        #111827,
-        #0f172a
-    );
-
-    background-size: 400% 400%;
-
-    animation: gradientBG 15s ease infinite;
-
-    color: white;
-
-    transition:
-    background 0.5s ease,
-    color 0.5s ease;
-
-}
-    @keyframes gradientBG{
-
-    0%{
-        background-position: 0% 50%;
+    /* Card entrance - no Bootstrap utility for custom cubic-bezier entrance */
+    .card-enter { animation: slideUp 0.85s cubic-bezier(0.22,1,0.36,1) both; }
+    @keyframes slideUp {
+      from { opacity:0; transform:translateY(36px) scale(0.96); }
+      to   { opacity:1; transform:translateY(0) scale(1); }
     }
 
-    50%{
-        background-position: 100% 50%;
+    /* Gold top accent line - ::before pseudo not possible in Bootstrap */
+    .card-accent::before {
+      content:''; position:absolute; top:0; left:15%; right:15%; height:2px;
+      background: linear-gradient(90deg, transparent, #c8a96e, transparent);
     }
 
-    100%{
-        background-position: 0% 50%;
+    /* Blinking cursor - step-end timing not in Bootstrap */
+    .type-cursor {
+      display:inline-block; width:2px; height:0.85em;
+      background:#c8a96e; margin-left:2px; vertical-align:middle;
+      animation: blink 0.9s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* Pulsing badge dot - scale animation not in Bootstrap */
+    .pulse-dot {
+      width:7px; height:7px; border-radius:50%; background:#4ade80;
+      animation: pulse-dot 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%,100% { opacity:1; transform:scale(1); }
+      50%      { opacity:0.4; transform:scale(0.7); }
     }
 
-}
-
-        section{
-            padding-top: 100px;
-            padding-bottom: 100px;
-        }
-
-        /* Navbar */
-
-        .navbar{
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(10px);
-            padding: 15px 0;
-        }
-
-        .navbar-brand{
-            font-size: 34px;
-
-            font-weight: 700;
-
-            letter-spacing: -2px;
-        }
-
-        .nav-link{
-            color: white !important;
-            margin-left: 15px;
-            transition: 0.3s;
-        }
-
-        .nav-link:hover{
-            color: #38bdf8 !important;
-        }
-
-        /* Hero Section */
-
-        .hero{
-
-    min-height: 100vh;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    text-align: center;
-
-    padding:
-    140px 40px 40px 40px;
-
-}
-
-        .hero img{
-            width: 220px;
-            height: 220px;
-            object-fit: cover;
-            border-radius: 50%;
-            border: 5px solid rgba(255,255,255,0.2);
-            box-shadow: 0px 0px 30px rgba(59,130,246,0.6);
-            margin-bottom: 25px;
-            transition: 0.4s;
-        }
-
-        .hero img:hover{
-            transform: scale(1.05);
-        }
-
-        .hero h1{
-
-    font-size: 78px;
-
-    font-weight: 700;
-
-    line-height: 1.1;
-
-    letter-spacing: -3px;
-
-    background:
-    linear-gradient(
-        to right,
-        #38bdf8,
-        #818cf8
-    );
-
-    -webkit-background-clip: text;
-
-    -webkit-text-fill-color: transparent;
-
-}
-    .hero p{
-
-    font-size: 24px;
-
-    font-weight: 400;
-
-    color: #cbd5e1;
-
-    letter-spacing: 0.5px;
-
-}
-        .btn-custom{
-            background: linear-gradient(to right, #3b82f6, #8b5cf6);
-            border: none;
-            color: white;
-            padding: 12px 28px;
-            border-radius: 30px;
-            font-weight: bold;
-            transition: 0.3s;
-            margin: 10px;
-        }
-
-        .btn-custom:hover{
-            transform: scale(1.05);
-            color: white;
-        }
-
-        /* Section Titles */
-
-        .section-title{
-
-    text-align: center;
-
-    font-size: 52px;
-
-    font-weight: 700;
-
-    margin-bottom: 50px;
-
-    letter-spacing: -2px;
-
-}
-
-        /* Glass Cards */
-
-        .card{
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            color: white;
-            transition: 0.4s;
-        }
-
-        .card:hover{
-
-    transform: translateY(-10px);
-
-    box-shadow:
-    0 0 10px #38bdf8,
-    0 0 20px #38bdf8,
-    0 0 40px #38bdf8;
-
-}
-        /* About */
-
-        .about-img{
-            border-radius: 20px;
-            box-shadow: 0px 0px 20px rgba(59,130,246,0.4);
-        }
-
-        /* Skills */
-
-        .skill-card{
-            text-align: center;
-            padding: 30px;
-        }
-
-        .skill-card i{
-            font-size: 50px;
-            margin-bottom: 15px;
-            color: #38bdf8;
-        }
-
-        /* Contact */
-
-        .contact-info i{
-            color: #38bdf8;
-            margin-right: 10px;
-        }
-
-        .contact-info a{
-            color: white;
-            text-decoration: none;
-        }
-
-        .contact-info a:hover{
-            color: #38bdf8;
-        }
-
-        /* Footer */
-
-        footer{
-            background: rgba(255,255,255,0.05);
-            text-align: center;
-            padding: 25px;
-        }
-
-        footer a{
-            color: white;
-            font-size: 25px;
-            margin: 0 10px;
-            transition: 0.3s;
-        }
-
-        footer a:hover{
-            color: #38bdf8;
-        }
-
-        /* Mobile */
-
-        @media(max-width:768px){
-
-            .hero h1{
-                font-size: 45px;
-            }
-
-            .hero p{
-                font-size: 18px;
-            }
-
-            .hero img{
-                width: 170px;
-                height: 170px;
-            }
-
-        }
-
-        .nav-link.active{
-    color: #38bdf8 !important;
-}
-
-    #particles-js{
-
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-
-    z-index: -1;
-
-    background: linear-gradient(to right, #0f172a, #1e293b);
-
-}
-
-    .blob{
-    position: fixed;
-    border-radius: 50%;
-    filter: blur(80px);
-    opacity: 0.4;
-    z-index: -2;
-    animation: float 10s infinite ease-in-out;
-}
-
-.blob1{
-    width: 300px;
-    height: 300px;
-    background: #3b82f6;
-    top: 10%;
-    left: 10%;
-}
-
-.blob2{
-    width: 250px;
-    height: 250px;
-    background: #8b5cf6;
-    bottom: 10%;
-    right: 10%;
-}
-
-.blob3{
-    width: 200px;
-    height: 200px;
-    background: #06b6d4;
-    top: 50%;
-    left: 50%;
-}
-
-@keyframes float{
-
-    0%{
-        transform: translateY(0px);
+    /* Copy toast - absolute centered right, opacity transition */
+    .copy-toast {
+      position:absolute; right:10px; top:50%; transform:translateY(-50%);
+      opacity:0; pointer-events:none; transition:opacity 0.3s;
+    }
+    .copy-toast.show { opacity:1; }
+
+    /* Gold divider - gradient not possible in Bootstrap hr */
+    .gold-divider {
+      height:1px; border:none; opacity:1;
+      background: linear-gradient(90deg, transparent, rgba(200,169,110,0.5), transparent);
     }
 
-    50%{
-        transform: translateY(-40px);
-    }
+    /* Canvas fixed background */
+    #bg-canvas { position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; }
 
-    100%{
-        transform: translateY(0px);
-    }
+    /* =========================
+   RESPONSIVE FIXES
+========================= */
+
+/* Card Responsive */
+#vcCard{
+  width:100%;
+  max-width:340px;
+}
+
+/* Photo Responsive */
+.photo-ring{
+  width:clamp(80px, 24vw, 110px);
+  height:clamp(80px, 24vw, 110px);
+}
+
+/* Name Responsive */
+#profileName{
+  font-size:clamp(1.2rem, 4vw, 1.65rem) !important;
+  text-align:center;
+  word-break:break-word;
+}
+
+/* =========================
+   SKILL TAG FIX
+========================= */
+
+.skill-tags{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    justify-content:center;
+
+    align-items:center;
+
+    gap:8px;
+
+    width:100%;
 
 }
 
-#matrix{
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: -3;
-    opacity: 0.08;
-}
+/* Skill Badge */
 
-.cursor{
+.skill-tags .badge{
 
-    width: 20px;
-    height: 20px;
+    min-width:110px;
 
-    border: 2px solid #38bdf8;
+    text-align:center;
 
-    border-radius: 50%;
+    font-size:0.65rem !important;
 
-    position: fixed;
+    padding:8px 12px !important;
 
-    pointer-events: none;
-
-    transform: translate(-50%,-50%);
-
-    z-index: 9999;
+    white-space:nowrap;
 
 }
 
-.social-sidebar{
+/* Mobile Fix */
 
-    position: fixed;
+@media (max-width:400px){
 
-    top: 50%;
-    left: 20px;
+    .skill-tags{
 
-    transform: translateY(-50%);
-
-    z-index: 999;
-
-}
-
-.social-sidebar a{
-
-    display: block;
-
-    color: white;
-
-    font-size: 28px;
-
-    margin: 20px 0;
-
-    transition: 0.3s;
-
-}
-
-.social-sidebar a:hover{
-
-    color: #38bdf8;
-    transform: scale(1.2);
-
-}
-
-
-.light-mode{
-
-    background: linear-gradient(
-        -45deg,
-        #f8fafc,
-        #e2e8f0,
-        #ffffff,
-        #f1f5f9
-    ) !important;
-
-    background-size: 400% 400%;
-
-    color: #111827 !important;
-
-}
-
-/* Navbar */
-
-.light-mode .navbar{
-
-    background: rgba(255,255,255,0.7) !important;
-
-    backdrop-filter: blur(12px);
-
-}
-
-/* Navbar Links */
-
-.light-mode .nav-link,
-.light-mode .navbar-brand{
-
-    color: #111827 !important;
-
-}
-
-/* Hero Text */
-
-.light-mode .hero p{
-
-    color: #374151 !important;
-
-}
-
-/* Cards */
-
-.light-mode .card{
-
-    background: rgba(255,255,255,0.7) !important;
-
-    color: #111827 !important;
-
-    border: 1px solid rgba(0,0,0,0.08);
-
-    backdrop-filter: blur(15px);
-
-}
-
-/* Footer */
-
-.light-mode footer{
-
-    background: rgba(255,255,255,0.7) !important;
-
-    color: #111827 !important;
-
-}
-
-/* Footer Icons */
-
-.light-mode footer a{
-
-    color: #111827 !important;
-
-}
-
-/* Sidebar Icons */
-
-.light-mode .social-sidebar a{
-
-    color: #111827 !important;
-
-}
-
-/* Contact Links */
-
-.light-mode .contact-info a{
-
-    color: #111827 !important;
-
-}
-
-/* Theme Button */
-
-.light-mode #theme-toggle{
-
-    border-color: #111827 !important;
-
-    color: #111827 !important;
-
-}
-
-/* Particles Background */
-
-.light-mode #particles-js{
-
-    background:
-    linear-gradient(
-        to right,
-        #f8fafc,
-        #e2e8f0
-    ) !important;
-
-}
-
-/* Matrix Lower Visibility */
-
-.light-mode #matrix{
-
-    opacity: 0.015;
-
-}
-
-/* Blobs Softer */
-
-.light-mode .blob1{
-
-    background: #60a5fa;
-
-}
-
-.light-mode .blob2{
-
-    background: #a78bfa;
-
-}
-
-.light-mode .blob3{
-
-    background: #22d3ee;
-
-}
-
-@media(max-width:768px){
-
-    .social-sidebar{
-
-        left: 10px;
+        gap:6px;
 
     }
 
-    .social-sidebar a{
+    .skill-tags .badge{
 
-        font-size: 22px;
+        min-width:130px;
+
+        font-size:0.6rem !important;
 
     }
 
 }
-
-*{
-    transition:
-    background 0.4s ease,
-    color 0.4s ease,
-    border 0.4s ease;
-}
-
-
-
-.light-mode .btn-outline-light{
-
-    color: #111827 !important;
-
-    border-color: #111827 !important;
-
-}
-
-.light-mode .btn-outline-light:hover{
-
-    background: #111827 !important;
-
-    color: white !important;
-
-}
-
-
-    </style>
-
+  </style>
 </head>
+<body class="overflow-x-hidden" style="background:#060608; min-height:100vh;">
 
-<body>
+  <canvas id="bg-canvas"></canvas>
 
-    <div id="particles-js"></div>
+  <!-- Page wrapper -->
+  <div class="position-relative d-flex align-items-center justify-content-center min-vh-100 py-4 px-3" style="z-index:1;">
 
-    <div class="blob blob1"></div>
-    <div class="blob blob2"></div>
-    <div class="blob blob3"></div>
+    <!-- Card -->
+    <div class="card-enter card-accent position-relative overflow-hidden rounded-4 p-4"
+         id="vcCard"
+         style="width:340px; background:#131313; border:1px solid rgba(200,169,110,0.22);">
 
-    <div class="cursor"></div>
+      <!-- Theme toggle -->
+      <button id="themeBtn"
+              class="btn position-absolute top-0 end-0 mt-2 me-2 rounded-circle d-flex align-items-center justify-content-center p-0"
+              style="width:30px; height:30px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#c8a96e;">
+        <i class="bi bi-sun-fill" id="themeIcon" style="font-size:13px;"></i>
+      </button>
 
-    <div id="loader">
+      <!-- Photo + Badge -->
+      <div class="d-flex flex-column align-items-center mt-2 mb-3 gap-2">
+        <div class="photo-ring">
+          <div class="photo-inner d-flex align-items-center justify-content-center">
+            <img src="profile.png" alt="Your Name"/>
+          </div>
+        </div>
+        <!-- Availability badge -->
+        <span class="d-inline-flex align-items-center gap-2 rounded-pill px-3 py-1 small fw-medium"
+              style="background:rgba(34,197,94,0.12); border:1px solid rgba(34,197,94,0.3); color:#4ade80; font-size:0.68rem; letter-spacing:0.5px;">
+          <span class="pulse-dot"></span>
+          Open to Work
+        </span>
+      </div>
 
-    <h1>Loading Portfolio...</h1>
+      <!-- Name -->
+      <div class="text-center mb-1">
+        <div class="fw-bold text-white" style="font-family:Georgia,serif; font-size:1.65rem; letter-spacing:0.3px; line-height:1.15;">
+          SHRIHARISH V M
+        </div>
+      </div>
 
-</div>
+      <!-- Typing role -->
+      <div class="text-center mb-3">
+        <span class="fw-medium text-uppercase" style="font-size:0.7rem; letter-spacing:2.5px; color:#c8a96e;">
+          <span id="typed-role"></span><span class="type-cursor"></span>
+        </span>
+      </div>
 
-    <div class="social-sidebar">
+      <!-- Skill tags -->
+      <div class="skill-tags mb-3 px-1">
+        <span class="badge rounded-pill fw-medium px-2 py-1"
+              style="font-size:0.65rem; background:rgba(200,169,110,0.1); border:1px solid rgba(200,169,110,0.25); color:#c8a96e;">Python</span>
+        <span class="badge rounded-pill fw-medium px-2 py-1"
+              style="font-size:0.65rem; background:rgba(200,169,110,0.1); border:1px solid rgba(200,169,110,0.25); color:#c8a96e;">Machine Learning</span>
+        <span class="badge rounded-pill fw-medium px-2 py-1"
+              style="font-size:0.65rem; background:rgba(200,169,110,0.1); border:1px solid rgba(200,169,110,0.25); color:#c8a96e;">React</span>
+        <span class="badge rounded-pill fw-medium px-2 py-1"
+              style="font-size:0.65rem; background:rgba(200,169,110,0.1); border:1px solid rgba(200,169,110,0.25); color:#c8a96e;">FastAPI</span>
+      </div>
 
-    <a href="https://github.com" target="_blank">
-        <i class="bi bi-github"></i>
-    </a>
+      <hr class="gold-divider mx-3 mb-3"/>
 
-    <a href="https://linkedin.com" target="_blank">
-        <i class="bi bi-linkedin"></i>
-    </a>
+      <!-- Contact rows -->
+      <div class="d-flex flex-column gap-2 mb-3 px-1">
 
-    <a href="mailto:harish@gmail.com">
-        <i class="bi bi-envelope-fill"></i>
-    </a>
-
-</div>
-
-    <!-- Navbar -->
-
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
-
-        <div class="container">
-
-            <a class="navbar-brand" href="#">
-                Harish
-            </a>
-
-            <button class="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#menu">
-
-                <span class="navbar-toggler-icon"></span>
-
-            </button>
-
-            <div class="collapse navbar-collapse" id="menu">
-
-                <ul class="navbar-nav ms-auto">
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="#home">Home</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="#about">About</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="#projects">Projects</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="#skills">Skills</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="#contact">Contact</a>
-                    </li>
-
-                </ul>
-                <button id="theme-toggle"
-class="btn btn-outline-light rounded-pill">
-
-    🌙
-
-</button>
-
-            </div>
-
+        <!-- Email -->
+        <div class="d-flex align-items-center gap-3 rounded-3 px-3 py-2 position-relative"
+             style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); cursor:pointer; font-size:0.83rem; color:#a89c85;"
+             onclick="copyText('shriharishmuthusivam@gmail.com','toast-email')"
+             onmouseover="this.style.background='rgba(200,169,110,0.1)'; this.style.borderColor='rgba(200,169,110,0.3)'; this.style.color='#f2ede4';"
+             onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.borderColor='rgba(255,255,255,0.07)'; this.style.color='#a89c85';">
+          <div class="d-flex align-items-center justify-content-center rounded-2 flex-shrink-0"
+               style="width:32px; height:32px; background:rgba(200,169,110,0.15); color:#c8a96e; font-size:14px;">
+            <i class="bi bi-envelope-fill"></i>
+          </div>
+          <span class="text-truncate flex-grow-1">shriharishmuthusivam@gmail.com</span>
+          <span class="copy-toast badge rounded-2 fw-bold" id="toast-email"
+                style="background:#4ade80; color:#0a1a0a; font-size:0.65rem;">Copied!</span>
         </div>
 
-    </nav>
-
-    <!-- Hero Section -->
-
-    <section class="hero" id="home">
-
-        <div class="container">
-
-            <!-- Replace with your image -->
-
-            <img src="profile.png" alt="Shri Harish Photo">
-
-            <h1>Hello, I'm Shri Harish</h1>
-
-            <p>
-    I am a <span class="typing"></span>
-</p>
-
-            <div class="mt-4">
-
-                <a href="#projects" class="btn btn-custom">
-                    View Projects
-                </a>
-
-                <a href="resume.pdf"
-                class="btn btn-outline-light rounded-pill px-4"
-                download>
-
-                    Download Resume
-
-                </a>
-
-            </div>
-
+        <!-- Phone -->
+        <div class="d-flex align-items-center gap-3 rounded-3 px-3 py-2 position-relative"
+             style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); cursor:pointer; font-size:0.83rem; color:#a89c85;"
+             onclick="copyText('+91 94432 29919','toast-phone')"
+             onmouseover="this.style.background='rgba(200,169,110,0.1)'; this.style.borderColor='rgba(200,169,110,0.3)'; this.style.color='#f2ede4';"
+             onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.borderColor='rgba(255,255,255,0.07)'; this.style.color='#a89c85';">
+          <div class="d-flex align-items-center justify-content-center rounded-2 flex-shrink-0"
+               style="width:32px; height:32px; background:rgba(200,169,110,0.15); color:#c8a96e; font-size:14px;">
+            <i class="bi bi-telephone-fill"></i>
+          </div>
+          <span class="flex-grow-1">+91 94432 29919</span>
+          <span class="copy-toast badge rounded-2 fw-bold" id="toast-phone"
+                style="background:#4ade80; color:#0a1a0a; font-size:0.65rem;">Copied!</span>
         </div>
 
-    </section>
-
-    <!-- About Section -->
-
-    <section id="about">
-
-        <div class="container">
-
-            <h2 class="section-title">
-                About Me
-            </h2>
-
-            <div class="row align-items-center">
-
-                <div class="col-md-5 mb-4">
-
-                    <img src="profile.png"
-                    class="img-fluid about-img">
-
-                </div>
-
-                <div class="col-md-7">
-
-                    <div class="card p-5">
-
-                        <p class="fs-5">
-
-                            I am Shri Harish V M, an M.Sc.AI student passionate
-                            about Artificial Intelligence, Web
-                            Development and Software Technologies.
-
-                        </p>
-
-                        <p class="fs-5">
-
-                            I enjoy building AI projects, modern
-                            websites and learning new technologies
-                            to improve my technical skills.
-
-                        </p>
-
-                        <p class="fs-5">
-
-                            My goal is to build a strong career
-                            in AI and software development.
-
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </section>
-
-    <!-- Projects Section -->
-
-    <section id="projects">
-
-        <div class="container">
-
-            <h2 class="section-title">
-                My Projects
-            </h2>
-
-            <div class="row">
-
-                <div class="col-md-4 mb-4">
-
-                    <div class="card p-4 h-100">
-
-                        <h3>AI_Mock_Interview</h3>
-
-                        <p class="mt-3">
-
-                            A chatbot based project create to condact the 
-                            mock interview for the students.
-
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <div class="col-md-4 mb-4">
-
-                    <div class="card p-4 h-100">
-
-                        <h3>Pincode Finder</h3>
-
-                        <p class="mt-3">
-
-                            A python based project which is 
-                            used to find the pincode of bangalore city.
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <div class="col-md-4 mb-4">
-
-                    <div class="card p-4 h-100">
-
-                        <h3>Symposium Website</h3>
-
-                        <p class="mt-3">
-
-                            Full stack event management website
-                            for symposium registration.
-
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </section>
-
-    <!-- Skills Section -->
-
-    <section id="skills">
-
-        <div class="container">
-
-            <h2 class="section-title">
-                My Skills
-            </h2>
-
-            <div class="row">
-
-                <div class="col-md-3 mb-4">
-
-                    <div class="card skill-card">
-
-                        <i class="bi bi-filetype-html"></i>
-
-                        <h4>HTML</h4>
-
-                    </div>
-
-                </div>
-
-                <div class="col-md-3 mb-4">
-
-                    <div class="card skill-card">
-
-                        <i class="bi bi-filetype-css"></i>
-
-                        <h4>CSS</h4>
-
-                    </div>
-
-                </div>
-
-                <div class="col-md-3 mb-4">
-
-                    <div class="card skill-card">
-
-                        <i class="bi bi-bootstrap"></i>
-
-                        <h4>Bootstrap</h4>
-
-                    </div>
-
-                </div>
-
-                <div class="col-md-3 mb-4">
-
-                    <div class="card skill-card">
-
-                        <i class="bi bi-code-slash"></i>
-
-                        <h4>Python</h4>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </section>
-
-    <!-- Contact Section -->
-
-    <section id="contact">
-
-        <div class="container">
-
-            <h2 class="section-title">
-                Contact Me
-            </h2>
-
-            <div class="card p-5 text-center contact-info">
-
-                <p class="fs-4">
-
-                    <i class="bi bi-telephone-fill"></i>
-
-                    +91 94432299919
-
-                </p>
-
-                <p class="fs-4">
-
-                    <i class="bi bi-envelope-fill"></i>
-
-                    shriharishmuthusivam@gmail.com
-
-                </p>
-
-                <p class="fs-4">
-
-                    <i class="bi bi-linkedin"></i>
-
-                    <a href="https://www.linkedin.com/in/shri-harish/"
-                    target="_blank">
-
-                        LinkedIn Profile
-
-                    </a>
-
-                </p>
-
-                <p class="fs-4">
-
-                    <i class="bi bi-github"></i>
-
-                    <a href="https://github.com/shriharishmuthusivam"
-                    target="_blank">
-
-                        GitHub Profile
-
-                    </a>
-
-                </p>
-
-            </div>
-
-        </div>
-
-    </section>
-
-    <!-- Footer -->
-
-    <footer>
-
-        <h5>
-            Created by Harish
-        </h5>
-
-        <div class="mt-3">
-
-            <a href="#">
-                <i class="bi bi-github"></i>
-            </a>
-
-            <a href="#">
-                <i class="bi bi-linkedin"></i>
-            </a>
-
-            <a href="#">
-                <i class="bi bi-envelope-fill"></i>
-            </a>
-
-        </div>
-
-        <p class="mt-3">
-            © 2026 All Rights Reserved
-        </p>
-
-    </footer>
-
-    <!-- Bootstrap JS -->
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
-
-
-    <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
-
-<script>
-
-    var typed = new Typed(".typing", {
-
-        strings: [
-            "M.Sc.AI Student",
-            "AI Chatbot Developer",
-            "Web Developer"
-            
-        ],
-
-        typeSpeed: 80,
-        backSpeed: 50,
-        loop: true
-
+      </div>
+
+      <!-- Social Buttons -->
+      <div class="d-flex gap-2 px-1 mb-3">
+        <a href="https://github.com/shriharishmuthusivam" target="_blank"
+           class="btn d-flex align-items-center justify-content-center gap-2 flex-fill py-2 fw-semibold rounded-3"
+           style="background:linear-gradient(135deg,#1a1a1a,#2a2a2a); border:1.5px solid rgba(255,255,255,0.18); color:#fff; font-size:0.82rem; letter-spacing:0.5px;"
+           onmouseover="this.style.background='linear-gradient(135deg,#2d2d2d,#444)'; this.style.borderColor='rgba(255,255,255,0.5)'; this.style.transform='translateY(-3px) scale(1.03)';"
+           onmouseout="this.style.background='linear-gradient(135deg,#1a1a1a,#2a2a2a)'; this.style.borderColor='rgba(255,255,255,0.18)'; this.style.transform='';">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0;">
+            <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/>
+          </svg>
+          GitHub
+        </a>
+        <a href="https://www.linkedin.com/in/shri-harish/" target="_blank"
+           class="btn d-flex align-items-center justify-content-center gap-2 flex-fill py-2 fw-semibold rounded-3"
+           style="background:linear-gradient(135deg,#0a66c2,#004182); border:1.5px solid rgba(106,172,245,0.4); color:#fff; font-size:0.82rem; letter-spacing:0.5px;"
+           onmouseover="this.style.background='linear-gradient(135deg,#1a7fd4,#0a55a8)'; this.style.borderColor='rgba(106,172,245,0.8)'; this.style.transform='translateY(-3px) scale(1.03)';"
+           onmouseout="this.style.background='linear-gradient(135deg,#0a66c2,#004182)'; this.style.borderColor='rgba(106,172,245,0.4)'; this.style.transform='';">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0;">
+            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+          </svg>
+          LinkedIn
+        </a>
+      </div>
+
+      <!-- Let's Connect -->
+      <div class="px-1 mb-3">
+        <a href="mailto:shriharishmuthusivam@gmail.com"
+           class="btn w-100 py-2 fw-bold text-decoration-none rounded-3 d-flex align-items-center justify-content-center gap-2"
+           style="background:linear-gradient(135deg,#c8a96e,#a07840); border:none; color:#0d0d0d; font-size:0.85rem; letter-spacing:1px; text-transform:uppercase;"
+           onclick="triggerConfetti()"
+           onmouseover="this.style.transform='translateY(-2px) scale(1.02)'; this.style.boxShadow='0 8px 30px rgba(200,169,110,0.55)';"
+           onmouseout="this.style.transform=''; this.style.boxShadow='';">
+          <i class="bi bi-envelope"></i> Let's Connect!
+        </a>
+      </div>
+
+      <hr class="gold-divider mx-3 mb-3"/>
+
+      <!-- Portfolio Button -->
+      <div class="px-1 mb-2">
+        <a href="https://shriharishmuthusivam.github.io/Internship_webpage/#" target="_blank"
+           class="btn w-100 py-2 fw-semibold rounded-3 d-flex align-items-center justify-content-center gap-2"
+           style="background:transparent; border:1.5px solid rgba(200,169,110,0.45); color:#c8a96e; font-size:0.82rem; letter-spacing:0.8px;"
+           onmouseover="this.style.background='rgba(200,169,110,0.1)'; this.style.borderColor='#c8a96e'; this.style.transform='translateY(-2px) scale(1.02)';"
+           onmouseout="this.style.background='transparent'; this.style.borderColor='rgba(200,169,110,0.45)'; this.style.transform='';">
+          <i class="bi bi-globe2"></i> View Portfolio
+        </a>
+      </div>
+
+    </div><!-- /card -->
+
+  </div><!-- /wrapper -->
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+
+    // ── 1. ANIMATED BACKGROUND (canvas — no Bootstrap equivalent) ──
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let W, H;
+    function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+    resize(); window.addEventListener('resize', resize);
+    const orbs = [
+      { x:0.15,y:0.20,r:0.38,hue:38, speed:0.00018,amp:0.12,phase:0.00 },
+      { x:0.80,y:0.75,r:0.32,hue:210,speed:0.00023,amp:0.10,phase:1.80 },
+      { x:0.50,y:0.50,r:0.28,hue:280,speed:0.00014,amp:0.08,phase:3.50 },
+      { x:0.85,y:0.15,r:0.22,hue:160,speed:0.00029,amp:0.09,phase:0.90 },
+      { x:0.10,y:0.80,r:0.20,hue:340,speed:0.00021,amp:0.11,phase:2.40 },
+    ];
+    const particles = Array.from({length:55},()=>({
+      x:Math.random(), y:Math.random(),
+      size:Math.random()*1.6+0.4,
+      speedX:(Math.random()-0.5)*0.00012,
+      speedY:(Math.random()-0.5)*0.00012,
+      opacity:Math.random()*0.5+0.15,
+      hue:Math.random()*360
+    }));
+    let t = 0;
+    let isLightMode = false;
+
+    function drawBg() {
+      t++;
+      // Same animation — only base color + visibility values adapt
+      const bg          = isLightMode ? '#f5f0e8'              : '#060608';
+      const orbA1       = isLightMode ? 0.55                   : 0.18;   // orb inner opacity
+      const orbA2       = isLightMode ? 0.30                   : 0.10;   // orb mid opacity
+      const orbL1       = isLightMode ? '45%'                  : '60%';  // orb inner lightness
+      const orbL2       = isLightMode ? '35%'                  : '45%';  // orb mid lightness
+      const orbL3       = isLightMode ? '25%'                  : '30%';  // orb outer lightness
+      const gridColor   = isLightMode ? 'rgba(0,0,0,0.08)'     : 'rgba(255,255,255,0.025)';
+      const ptLightness = isLightMode ? '35%'                  : '75%';  // particles dark on light
+      const ptOpacity   = isLightMode ? p => p.opacity * 0.9   : p => p.opacity;
+
+      ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
+
+      orbs.forEach(o => {
+        const cx=(o.x+Math.sin(t*o.speed+o.phase)*o.amp)*W;
+        const cy=(o.y+Math.cos(t*o.speed*0.7+o.phase)*o.amp)*H;
+        const r=o.r*Math.min(W,H);
+        const g=ctx.createRadialGradient(cx,cy,0,cx,cy,r);
+        g.addColorStop(0,   `hsla(${o.hue},85%,${orbL1},${orbA1})`);
+        g.addColorStop(0.4, `hsla(${o.hue},75%,${orbL2},${orbA2})`);
+        g.addColorStop(1,   `hsla(${o.hue},65%,${orbL3},0.00)`);
+        ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+        ctx.fillStyle=g; ctx.fill();
+      });
+
+      ctx.save(); ctx.strokeStyle=gridColor; ctx.lineWidth=0.5;
+      for(let x=0;x<W;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+      for(let y=0;y<H;y+=60){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+      ctx.restore();
+
+      particles.forEach(p=>{
+        p.x+=p.speedX; p.y+=p.speedY;
+        if(p.x<0)p.x=1; if(p.x>1)p.x=0;
+        if(p.y<0)p.y=1; if(p.y>1)p.y=0;
+        ctx.beginPath(); ctx.arc(p.x*W,p.y*H,p.size,0,Math.PI*2);
+        ctx.fillStyle=`hsla(${p.hue},65%,${ptLightness},${ptOpacity(p)})`; ctx.fill();
+      });
+
+      requestAnimationFrame(drawBg);
+    }
+    drawBg();
+
+    // ── 2. TYPING ANIMATION ──
+    const roles = [
+      "M.Sc. AI Student",
+      "AI Chatbot Developer",
+      "Machine Learning Engineer",
+      "NLP Enthusiast",
+      "Full Stack Developer",
+      "Open Source Contributor",
+    ];
+    let rIdx=0, charIdx=0, deleting=false;
+    const typedEl = document.getElementById('typed-role');
+    function type() {
+      const current = roles[rIdx];
+      if (!deleting) {
+        typedEl.textContent = current.slice(0, ++charIdx);
+        if (charIdx === current.length) { deleting=true; setTimeout(type,1800); return; }
+        setTimeout(type, 75);
+      } else {
+        typedEl.textContent = current.slice(0, --charIdx);
+        if (charIdx === 0) { deleting=false; rIdx=(rIdx+1)%roles.length; setTimeout(type,400); return; }
+        setTimeout(type, 40);
+      }
+    }
+    type();
+
+    // ── 3. COPY TO CLIPBOARD ──
+    function copyText(text, toastId) {
+      navigator.clipboard.writeText(text).then(() => {
+        const toast = document.getElementById(toastId);
+        toast.classList.add('show');
+        setTimeout(()=>toast.classList.remove('show'), 1500);
+      });
+    }
+
+    // ── 4. CONFETTI ──
+    function triggerConfetti() {
+      confetti({ particleCount:120, spread:80, origin:{y:0.7},
+        colors:['#c8a96e','#f0d898','#ffffff','#0a66c2','#4ade80'] });
+    }
+
+    // ── 5. DARK / LIGHT TOGGLE ──
+    const themeBtn  = document.getElementById('themeBtn');
+    const themeIcon = document.getElementById('themeIcon');
+    const vcCard    = document.getElementById('vcCard');
+    themeBtn.addEventListener('click', () => {
+      isLightMode = !isLightMode;           // flip canvas drawing mode
+      if (isLightMode) {
+        // Switch to LIGHT — canvas stays visible, draws light animation
+        document.body.setAttribute('data-bs-theme', 'light');
+        vcCard.style.background = '#ffffffee';
+        vcCard.style.border     = '1px solid rgba(200,169,110,0.4)';
+        vcCard.style.boxShadow  = '0 8px 40px rgba(0,0,0,0.1)';
+        themeIcon.className     = 'bi bi-sun-fill';
+        themeBtn.style.color    = '#a07840';
+        themeBtn.style.background = 'rgba(0,0,0,0.06)';
+        themeBtn.style.borderColor = 'rgba(0,0,0,0.12)';
+      } else {
+        // Switch to DARK — canvas draws dark animation
+        document.body.setAttribute('data-bs-theme', 'dark');
+        vcCard.style.background = '#131313';
+        vcCard.style.border     = '1px solid rgba(200,169,110,0.22)';
+        vcCard.style.boxShadow  = '';
+        themeIcon.className     = 'bi bi-moon-fill';
+        themeBtn.style.color    = '#c8a96e';
+        themeBtn.style.background = 'rgba(255,255,255,0.06)';
+        themeBtn.style.borderColor = 'rgba(255,255,255,0.1)';
+      }
     });
 
-</script>
-
-<script src="https://unpkg.com/scrollreveal"></script>
-
-<script>
-
-    ScrollReveal().reveal('.card', {
-
-        delay: 200,
-        distance: '50px',
-        duration: 1000,
-        origin: 'bottom',
-        interval: 200
-
+    // ── 6. 3D TILT ──
+    const card = document.getElementById('vcCard');
+    document.addEventListener('mousemove', e => {
+      const rect = card.getBoundingClientRect();
+      const cx = rect.left + rect.width/2;
+      const cy = rect.top  + rect.height/2;
+      const dx = (e.clientX - cx) / (rect.width/2);
+      const dy = (e.clientY - cy) / (rect.height/2);
+      card.style.transform = `perspective(900px) rotateY(${dx*6}deg) rotateX(${-dy*6}deg) scale(1.01)`;
     });
+    document.addEventListener('mouseleave', () => { card.style.transform = ''; });
 
-</script>
-
-<!-- Particles JS -->
-
-<script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
-
-<script>
-
-particlesJS("particles-js", {
-
-    "particles": {
-
-        "number": {
-            "value": 80
-        },
-
-        "color": {
-            "value": "#38bdf8"
-        },
-
-        "shape": {
-            "type": "circle"
-        },
-
-        "opacity": {
-            "value": 0.5
-        },
-
-        "size": {
-            "value": 3
-        },
-
-        "line_linked": {
-
-            "enable": true,
-            "distance": 150,
-            "color": "#38bdf8",
-            "opacity": 0.4,
-            "width": 1
-
-        },
-
-        "move": {
-
-            "enable": true,
-            "speed": 3
-
-        }
-
-    },
-
-    "interactivity": {
-
-        "events": {
-
-            "onhover": {
-                "enable": true,
-                "mode": "repulse"
-            },
-
-            "onclick": {
-                "enable": true,
-                "mode": "push"
-            }
-
-        }
-
-    },
-
-    "retina_detect": true
-
-});
-
-</script>
-
-<canvas id="matrix"></canvas>
-
-<script>
-
-const canvas = document.getElementById("matrix");
-const ctx = canvas.getContext("2d");
-
-canvas.height = window.innerHeight;
-canvas.width = window.innerWidth;
-
-const letters = "01";
-const fontSize = 14;
-const columns = canvas.width/fontSize;
-
-const drops = [];
-
-for(let x = 0; x < columns; x++)
-    drops[x] = 1;
-
-function draw(){
-
-    ctx.fillStyle = "rgba(0,0,0,0.05)";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-
-    ctx.fillStyle = "#0f0";
-    ctx.font = fontSize + "px monospace";
-
-    for(let i = 0; i < drops.length; i++){
-
-        const text =
-        letters[Math.floor(Math.random()*letters.length)];
-
-        ctx.fillText(text,i*fontSize,drops[i]*fontSize);
-
-        if(drops[i]*fontSize > canvas.height &&
-           Math.random() > 0.975)
-           drops[i] = 0;
-
-        drops[i]++;
-
-    }
-
-}
-
-setInterval(draw,33);
-
-</script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.7.0/vanilla-tilt.min.js"></script>
-
-<script>
-
-VanillaTilt.init(document.querySelectorAll(".card"), {
-
-    max: 15,
-    speed: 400,
-    glare: true,
-    "max-glare": 0.3,
-
-});
-
-</script>
-
-<script>
-
-const cursor = document.querySelector(".cursor");
-
-document.addEventListener("mousemove",(e)=>{
-
-    cursor.style.left = e.clientX + "px";
-    cursor.style.top = e.clientY + "px";
-
-});
-
-</script>
-
-<script>
-
-const toggleBtn =
-document.getElementById("theme-toggle");
-
-/* Detect System Theme */
-
-if(window.matchMedia(
-'(prefers-color-scheme: light)').matches){
-
-    document.body.classList.add("light-mode");
-
-    toggleBtn.innerHTML = "☀️";
-
-}
-
-/* Toggle Theme */
-
-toggleBtn.onclick = ()=>{
-
-    document.body.classList.toggle("light-mode");
-
-    if(document.body.classList.contains("light-mode")){
-
-        toggleBtn.innerHTML = "☀️";
-
-    }
-    else{
-
-        toggleBtn.innerHTML = "🌙";
-
-    }
-
-}
-
-</script>
-
-<script>
-
-window.addEventListener("load",()=>{
-
-    document.getElementById("loader")
-    .style.display = "none";
-
-});
-
-</script>
+  </script>
 </body>
-
 </html>
