@@ -96,33 +96,59 @@
   word-break:break-word;
 }
 
-/* Skill Tags Responsive */
+/* =========================
+   SKILL TAG FIX
+========================= */
+
 .skill-tags{
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
-  gap:8px;
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    justify-content:center;
+
+    align-items:center;
+
+    gap:8px;
+
+    width:100%;
+
 }
 
+/* Skill Badge */
+
 .skill-tags .badge{
-  font-size:clamp(0.55rem, 2vw, 0.65rem) !important;
-  white-space:nowrap;
+
+    min-width:110px;
+
+    text-align:center;
+
+    font-size:0.65rem !important;
+
+    padding:8px 12px !important;
+
+    white-space:nowrap;
+
 }
 
 /* Mobile Fix */
-@media (max-width:480px){
 
-  #vcCard{
-    padding:1rem !important;
-  }
+@media (max-width:400px){
 
-  .skill-tags{
-    gap:6px;
-  }
+    .skill-tags{
 
-  .skill-tags .badge{
-    padding:6px 10px !important;
-  }
+        gap:6px;
+
+    }
+
+    .skill-tags .badge{
+
+        min-width:130px;
+
+        font-size:0.6rem !important;
+
+    }
 
 }
   </style>
